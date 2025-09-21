@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, MapPin } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { user, signIn, signUp, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ 
@@ -18,6 +21,49 @@ const Login = () => {
     password: '', 
     confirmPassword: '' 
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    await signIn(loginForm.email, loginForm.password);
+    setIsSubmitting(false);
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    if (registerForm.password !== registerForm.confirmPassword) {
+      alert('Las contraseñas no coinciden');
+      return;
+    }
+
+    setIsSubmitting(true);
+    await signUp(registerForm.email, registerForm.password, registerForm.name);
+    setIsSubmitting(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-12 w-12 rounded-xl bg-gradient-primary flex items-center justify-center mx-auto mb-4">
+            <MapPin className="h-7 w-7 text-white" />
+          </div>
+          <p>Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
@@ -32,13 +78,6 @@ const Login = () => {
           </Link>
         </div>
 
-        {/* Supabase Connection Alert */}
-        <Alert className="mb-6 border-warning bg-warning/5">
-          <AlertDescription className="text-sm">
-            <strong>Conectar Supabase:</strong> Para habilitar la autenticación completa, 
-            conecta tu proyecto a Supabase usando el botón verde en la interfaz principal.
-          </AlertDescription>
-        </Alert>
 
         <Card className="shadow-strong">
           <CardHeader>
@@ -54,7 +93,7 @@ const Login = () => {
               </TabsList>
 
               <TabsContent value="login" className="space-y-4">
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={handleLogin}>
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Correo Electrónico</Label>
                     <Input
@@ -92,8 +131,12 @@ const Login = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full bg-gradient-primary">
-                    Iniciar Sesión
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-primary"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Iniciando...' : 'Iniciar Sesión'}
                   </Button>
                 </form>
 
@@ -108,7 +151,7 @@ const Login = () => {
               </TabsContent>
 
               <TabsContent value="register" className="space-y-4">
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={handleRegister}>
                   <div className="space-y-2">
                     <Label htmlFor="register-name">Nombre Completo</Label>
                     <Input
@@ -168,8 +211,12 @@ const Login = () => {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full bg-gradient-primary">
-                    Registrarse como Dueño de Negocio
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-primary"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Registrando...' : 'Registrarse como Dueño de Negocio'}
                   </Button>
                 </form>
 

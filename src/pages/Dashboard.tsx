@@ -1,70 +1,131 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Plus, 
   Edit, 
-  Eye, 
-  BarChart3, 
-  Users, 
-  Store,
+  Trash2, 
+  MapPin, 
+  Phone, 
+  Globe, 
+  Clock,
+  Image as ImageIcon,
   Settings,
-  LogOut,
-  Camera
+  BarChart3,
+  Users
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/useAuth";
+import { useBusinesses, useUserBusiness } from "@/hooks/useBusinesses";
 
 const Dashboard = () => {
-  const [userRole] = useState<'admin' | 'owner'>('owner'); // Simulated user role
-  const [hasBusinessProfile] = useState(false); // Simulated business profile state
+  const navigate = useNavigate();
+  const { user, userRole, loading } = useAuth();
+  const { businesses } = useBusinesses();
+  const { business: userBusiness, loading: businessLoading } = useUserBusiness(user?.id);
+  const [activeTab, setActiveTab] = useState("my-business");
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+    }
+  }, [user, loading, navigate]);
+
+  if (loading || businessLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="h-12 w-12 rounded-xl bg-gradient-primary flex items-center justify-center mx-auto mb-4">
+              <MapPin className="h-7 w-7 text-white" />
+            </div>
+            <p>Cargando...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  const isAdmin = userRole === "admin";
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Panel de Control
-          </h1>
+          <h1 className="text-3xl font-bold mb-2">Panel de Control</h1>
           <p className="text-muted-foreground">
-            {userRole === 'admin' 
-              ? 'Administra todos los negocios de la plataforma' 
+            {isAdmin 
+              ? 'Administra todos los negocios de la plataforma'
               : 'Gestiona tu perfil de negocio y atrae más clientes'
             }
           </p>
         </div>
 
-        {/* Supabase Connection Alert */}
-        <Alert className="mb-8 border-warning bg-warning/5">
-          <AlertDescription className="text-sm">
-            <strong>Conectar Backend:</strong> Para habilitar la funcionalidad completa de autenticación, 
-            base de datos y gestión de negocios, necesitas conectar tu proyecto a Supabase. 
-            Haz clic en el botón verde "Supabase" en la esquina superior derecha.
-          </AlertDescription>
-        </Alert>
+        {/* Navigation Tabs */}
+        <div className="flex space-x-1 mb-6 border-b border-border">
+          {!isAdmin && (
+            <Button
+              variant={activeTab === "my-business" ? "default" : "ghost"}
+              onClick={() => setActiveTab("my-business")}
+              className="rounded-b-none"
+            >
+              Mi Negocio
+            </Button>
+          )}
+          
+          {isAdmin && (
+            <>
+              <Button
+                variant={activeTab === "all-businesses" ? "default" : "ghost"}
+                onClick={() => setActiveTab("all-businesses")}
+                className="rounded-b-none"
+              >
+                Todos los Negocios
+              </Button>
+              <Button
+                variant={activeTab === "analytics" ? "default" : "ghost"}
+                onClick={() => setActiveTab("analytics")}
+                className="rounded-b-none"
+              >
+                Estadísticas
+              </Button>
+            </>
+          )}
+        </div>
 
-        {userRole === 'owner' ? (
-          <OwnerDashboard hasBusinessProfile={hasBusinessProfile} />
-        ) : (
-          <AdminDashboard />
+        {/* Content */}
+        {activeTab === "my-business" && !isAdmin && (
+          <BusinessOwnerDashboard userBusiness={userBusiness} />
+        )}
+        
+        {activeTab === "all-businesses" && isAdmin && (
+          <AdminBusinessesDashboard businesses={businesses} />
+        )}
+        
+        {activeTab === "analytics" && isAdmin && (
+          <AdminAnalyticsDashboard />
         )}
       </div>
     </div>
   );
 };
 
-const OwnerDashboard = ({ hasBusinessProfile }: { hasBusinessProfile: boolean }) => {
-  if (!hasBusinessProfile) {
+const BusinessOwnerDashboard = ({ userBusiness }: { userBusiness: any }) => {
+  if (!userBusiness) {
     return (
       <div className="text-center py-16">
         <div className="max-w-md mx-auto">
-          <div className="text-6xl mb-6">🏪</div>
+          <div className="h-20 w-20 rounded-full bg-gradient-primary flex items-center justify-center mx-auto mb-6">
+            <MapPin className="h-10 w-10 text-white" />
+          </div>
           <h2 className="text-2xl font-bold mb-4">
             ¡Crea el perfil de tu negocio!
           </h2>
@@ -81,142 +142,183 @@ const OwnerDashboard = ({ hasBusinessProfile }: { hasBusinessProfile: boolean })
   }
 
   return (
-    <Tabs defaultValue="overview" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="overview">Resumen</TabsTrigger>
-        <TabsTrigger value="profile">Mi Negocio</TabsTrigger>
-        <TabsTrigger value="gallery">Galería</TabsTrigger>
-        <TabsTrigger value="settings">Configuración</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="overview" className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Visualizaciones</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1,234</div>
-              <p className="text-xs text-muted-foreground">+12% desde el mes pasado</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Clicks en Teléfono</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">89</div>
-              <p className="text-xs text-muted-foreground">+5% desde el mes pasado</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Visitas al Sitio Web</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">456</div>
-              <p className="text-xs text-muted-foreground">+18% desde el mes pasado</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Calificación</CardTitle>
-              <Store className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">4.8</div>
-              <p className="text-xs text-muted-foreground">67 reseñas</p>
-            </CardContent>
-          </Card>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="profile" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Información del Negocio</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button>
+    <div className="space-y-6">
+      {/* Business Info Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl">{userBusiness.name}</CardTitle>
+            <Button variant="outline">
               <Edit className="h-4 w-4 mr-2" />
-              Editar Información
+              Editar
             </Button>
-            <p className="text-sm text-muted-foreground">
-              Aquí podrás editar toda la información de tu negocio: nombre, descripción, dirección, horarios, etc.
-            </p>
-          </CardContent>
-        </Card>
-      </TabsContent>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-semibold mb-2">Información Básica</h4>
+              <p className="text-sm text-muted-foreground mb-1">
+                <strong>Categoría:</strong> {userBusiness.category}
+              </p>
+              <p className="text-sm text-muted-foreground mb-1">
+                <strong>Dirección:</strong> {userBusiness.address}, {userBusiness.city}
+              </p>
+              {userBusiness.phone && (
+                <p className="text-sm text-muted-foreground mb-1">
+                  <Phone className="h-4 w-4 inline mr-1" />
+                  {userBusiness.phone}
+                </p>
+              )}
+              {userBusiness.website && (
+                <p className="text-sm text-muted-foreground">
+                  <Globe className="h-4 w-4 inline mr-1" />
+                  {userBusiness.website}
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-2">Descripción</h4>
+              <p className="text-sm text-muted-foreground">
+                {userBusiness.description || 'Sin descripción'}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <TabsContent value="gallery" className="space-y-6">
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Galería de Fotos</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Visualizaciones</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Button>
-              <Camera className="h-4 w-4 mr-2" />
-              Subir Fotos
-            </Button>
-            <p className="text-sm text-muted-foreground mt-4">
-              Puedes subir hasta 5 imágenes para mostrar tu negocio.
-            </p>
+            <div className="text-2xl font-bold">127</div>
+            <p className="text-xs text-muted-foreground">Este mes</p>
           </CardContent>
         </Card>
-      </TabsContent>
 
-      <TabsContent value="settings" className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Configuración de la Cuenta</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Contactos</CardTitle>
+            <Phone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button variant="outline">
-              <Settings className="h-4 w-4 mr-2" />
-              Configuración General
-            </Button>
-            <Button variant="outline" className="text-destructive">
-              <LogOut className="h-4 w-4 mr-2" />
-              Cerrar Sesión
-            </Button>
+          <CardContent>
+            <div className="text-2xl font-bold">23</div>
+            <p className="text-xs text-muted-foreground">Este mes</p>
           </CardContent>
         </Card>
-      </TabsContent>
-    </Tabs>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Visitas Web</CardTitle>
+            <Globe className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">89</div>
+            <p className="text-xs text-muted-foreground">Este mes</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Acciones Rápidas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button variant="outline" className="justify-start">
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Gestionar Galería
+            </Button>
+            <Button variant="outline" className="justify-start">
+              <Clock className="h-4 w-4 mr-2" />
+              Actualizar Horarios
+            </Button>
+            <Button variant="outline" className="justify-start">
+              <Settings className="h-4 w-4 mr-2" />
+              Configuración
+            </Button>
+            <Button variant="outline" className="justify-start" asChild>
+              <Link to={`/business/${userBusiness.id}`}>
+                Ver Perfil Público
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
-const AdminDashboard = () => {
-  const mockBusinesses = [
-    { id: 1, name: 'Café Central', category: 'Cafetería', status: 'active', owner: 'Juan Pérez' },
-    { id: 2, name: 'Restaurante El Buen Sabor', category: 'Restaurante', status: 'active', owner: 'María García' },
-    { id: 3, name: 'TecnoReparaciones', category: 'Tecnología', status: 'pending', owner: 'Carlos López' },
-  ];
-
+const AdminBusinessesDashboard = ({ businesses }: { businesses: any[] }) => {
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Gestión de Negocios</h2>
+        <Badge variant="secondary">{businesses.length} negocios</Badge>
+      </div>
+
+      <div className="space-y-4">
+        {businesses.map((business) => (
+          <Card key={business.id}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-lg">{business.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {business.category} • {business.city}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Creado: {new Date(business.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/business/${business.id}`}>
+                      Ver Perfil
+                    </Link>
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AdminAnalyticsDashboard = () => {
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Estadísticas de la Plataforma</h2>
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Negocios</CardTitle>
-            <Store className="h-4 w-4 text-muted-foreground" />
+            <MapPin className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">127</div>
+            <div className="text-2xl font-bold">124</div>
             <p className="text-xs text-muted-foreground">+8 este mes</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuarios Registrados</CardTitle>
+            <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -227,51 +329,15 @@ const AdminDashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendientes de Aprobación</CardTitle>
+            <CardTitle className="text-sm font-medium">Visualizaciones</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
-            <p className="text-xs text-muted-foreground">Requieren revisión</p>
+            <div className="text-2xl font-bold">2,341</div>
+            <p className="text-xs text-muted-foreground">+15% este mes</p>
           </CardContent>
         </Card>
       </div>
-
-      {/* Business Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Gestión de Negocios</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {mockBusinesses.map((business) => (
-              <div key={business.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">{business.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {business.category} • Dueño: {business.owner}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={business.status === 'active' ? 'default' : 'secondary'}>
-                    {business.status === 'active' ? 'Activo' : 'Pendiente'}
-                  </Badge>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to={`/business/${business.id}`}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      Ver
-                    </Link>
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Edit className="h-4 w-4 mr-1" />
-                    Editar
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
