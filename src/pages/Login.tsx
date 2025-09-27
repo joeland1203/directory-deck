@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, MapPin } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,11 +70,9 @@ const Login = () => {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2">
-            <div className="h-12 w-12 rounded-xl bg-gradient-primary flex items-center justify-center">
-              <MapPin className="h-7 w-7 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-foreground">DirectorioBiz</span>
+          <Link to="/" className="inline-flex items-center space-x-3">
+            <img src="/favicon.png" alt="Logo de Revista Belcanto" className="h-12 w-12 rounded-xl" />
+            <span className="text-2xl font-bold text-foreground">Revista Belcanto</span>
           </Link>
         </div>
 

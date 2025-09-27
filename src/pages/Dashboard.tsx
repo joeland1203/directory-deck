@@ -23,7 +23,7 @@ import { useBusinesses, useUserBusiness } from "@/hooks/useBusinesses";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, userRole, loading } = useAuth();
-  const { businesses } = useBusinesses();
+  const { businesses } = useBusinesses({});
   const { business: userBusiness, loading: businessLoading } = useUserBusiness(user?.id);
   const [activeTab, setActiveTab] = useState("my-business");
 
@@ -103,7 +103,7 @@ const Dashboard = () => {
 
         {/* Content */}
         {activeTab === "my-business" && !isAdmin && (
-          <BusinessOwnerDashboard userBusiness={userBusiness} />
+          <BusinessOwnerDashboard userBusiness={userBusiness} navigate={navigate} />
         )}
         
         {activeTab === "all-businesses" && isAdmin && (
@@ -118,7 +118,7 @@ const Dashboard = () => {
   );
 };
 
-const BusinessOwnerDashboard = ({ userBusiness }: { userBusiness: any }) => {
+const BusinessOwnerDashboard = ({ userBusiness, navigate }: { userBusiness: any, navigate: any }) => {
   if (!userBusiness) {
     return (
       <div className="text-center py-16">
@@ -132,7 +132,7 @@ const BusinessOwnerDashboard = ({ userBusiness }: { userBusiness: any }) => {
           <p className="text-muted-foreground mb-8">
             Comienza creando el perfil de tu negocio para que los clientes puedan encontrarte fácilmente.
           </p>
-          <Button size="lg" className="bg-gradient-primary">
+          <Button size="lg" className="bg-gradient-primary" onClick={() => navigate('/business-profile')}>
             <Plus className="h-5 w-5 mr-2" />
             Crear Perfil de Negocio
           </Button>
@@ -145,84 +145,67 @@ const BusinessOwnerDashboard = ({ userBusiness }: { userBusiness: any }) => {
     <div className="space-y-6">
       {/* Business Info Card */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl">{userBusiness.name}</CardTitle>
-            <Button variant="outline">
-              <Edit className="h-4 w-4 mr-2" />
-              Editar
-            </Button>
+        <div className="md:grid md:grid-cols-3 md:gap-6 p-6">
+          <div className="md:col-span-1">
+            {userBusiness.main_image_url ? (
+              <img 
+                src={userBusiness.main_image_url} 
+                alt={userBusiness.name} 
+                className="w-full h-auto aspect-video object-cover rounded-lg"
+              />
+            ) : (
+              <div className="w-full h-auto aspect-video bg-secondary rounded-lg flex items-center justify-center">
+                <ImageIcon className="h-12 w-12 text-muted-foreground" />
+              </div>
+            )}
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-semibold mb-2">Información Básica</h4>
-              <p className="text-sm text-muted-foreground mb-1">
-                <strong>Categoría:</strong> {userBusiness.category}
-              </p>
-              <p className="text-sm text-muted-foreground mb-1">
-                <strong>Dirección:</strong> {userBusiness.address}, {userBusiness.city}
-              </p>
-              {userBusiness.phone && (
-                <p className="text-sm text-muted-foreground mb-1">
-                  <Phone className="h-4 w-4 inline mr-1" />
-                  {userBusiness.phone}
-                </p>
-              )}
-              {userBusiness.website && (
-                <p className="text-sm text-muted-foreground">
-                  <Globe className="h-4 w-4 inline mr-1" />
-                  {userBusiness.website}
-                </p>
-              )}
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-2">Descripción</h4>
-              <p className="text-sm text-muted-foreground">
-                {userBusiness.description || 'Sin descripción'}
-              </p>
-            </div>
+          <div className="md:col-span-2 mt-4 md:mt-0">
+            <CardHeader className="p-0 mb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl">{userBusiness.name}</CardTitle>
+                <Button variant="default" onClick={() => navigate('/business-profile/edit')}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Información Básica</h4>
+                  <p className="text-sm text-muted-foreground mb-1 capitalize">
+                    <strong>Categoría:</strong> {userBusiness.category}
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    <strong>Dirección:</strong> {userBusiness.address}, {userBusiness.city}
+                  </p>
+                  {userBusiness.phone && (
+                    <p className="text-sm text-muted-foreground mb-1">
+                      <Phone className="h-4 w-4 inline mr-1" />
+                      {userBusiness.phone}
+                    </p>
+                  )}
+                  {userBusiness.website && (
+                    <p className="text-sm text-muted-foreground">
+                      <Globe className="h-4 w-4 inline mr-1" />
+                      {userBusiness.website}
+                    </p>
+                  )}
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2">Descripción</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {userBusiness.description || 'Sin descripción'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Visualizaciones</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">127</div>
-            <p className="text-xs text-muted-foreground">Este mes</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Contactos</CardTitle>
-            <Phone className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">23</div>
-            <p className="text-xs text-muted-foreground">Este mes</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Visitas Web</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">89</div>
-            <p className="text-xs text-muted-foreground">Este mes</p>
-          </CardContent>
-        </Card>
-      </div>
+      
 
       {/* Actions */}
       <Card>
@@ -231,15 +214,15 @@ const BusinessOwnerDashboard = ({ userBusiness }: { userBusiness: any }) => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button variant="outline" className="justify-start">
+            <Button variant="outline" className="justify-start" onClick={() => navigate('/business-profile/edit')}>
               <ImageIcon className="h-4 w-4 mr-2" />
               Gestionar Galería
             </Button>
-            <Button variant="outline" className="justify-start">
+            <Button variant="outline" className="justify-start" onClick={() => navigate('/business-profile/edit')}>
               <Clock className="h-4 w-4 mr-2" />
               Actualizar Horarios
             </Button>
-            <Button variant="outline" className="justify-start">
+            <Button variant="outline" className="justify-start" onClick={() => navigate('/business-profile/edit')}>
               <Settings className="h-4 w-4 mr-2" />
               Configuración
             </Button>

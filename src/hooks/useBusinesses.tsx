@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -21,21 +21,52 @@ export interface Business {
   updated_at: string;
 }
 
-export const useBusinesses = () => {
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [loading, setLoading] = useState(true);
+interface UseBusinessesProps {
+  searchTerm?: string;
+  category?: string;
+  pageSize?: number;
+}
 
-  const fetchBusinesses = async () => {
+export const useBusinesses = ({ searchTerm, category, pageSize = 9 }: UseBusinessesProps) => {
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const fetchBusinesses = useCallback(async (currentPage: number, isNewQuery: boolean) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+
+      let query = supabase
         .from('businesses')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' });
+
+      if (searchTerm) {
+        query = query.ilike('name', `%${searchTerm}%`);
+      }
+      if (category && category !== 'todos') {
+        query = query.eq('category', category);
+      }
+
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
-      setBusinesses(data || []);
-    } catch (error) {
+
+      if (data) {
+        if (isNewQuery) {
+          setBusinesses(data);
+        } else {
+          setBusinesses(prev => [...prev, ...data]);
+        }
+        setHasMore(data.length === pageSize && count && (from + data.length) < count);
+      }
+
+    } catch (error: any) {
       console.error('Error fetching businesses:', error);
       toast({
         variant: "destructive",
@@ -45,15 +76,26 @@ export const useBusinesses = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, category, pageSize]);
 
   useEffect(() => {
-    fetchBusinesses();
-  }, []);
+    setPage(1);
+    setHasMore(true);
+    fetchBusinesses(1, true);
+  }, [searchTerm, category, fetchBusinesses]);
 
-  return { businesses, loading, refetch: fetchBusinesses };
+  const loadMore = () => {
+    if (!loading && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchBusinesses(nextPage, false);
+    }
+  };
+
+  return { businesses, loading, hasMore, loadMore };
 };
 
+// useUserBusiness remains the same
 export const useUserBusiness = (userId: string | undefined) => {
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);

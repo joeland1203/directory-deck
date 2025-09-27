@@ -12,7 +12,7 @@ const BusinessCard = ({ business }: BusinessCardProps) => {
   const fullAddress = `${business.address}, ${business.city}, ${business.state}`;
   const displayImage = business.main_image_url || '/placeholder.svg';
   return (
-    <Link to={`/business/${business.id}`}>
+    <Link to={`/business/${business.id}`} state={{ fromCategory: business.category }}>
       <Card className="group overflow-hidden hover:shadow-medium transition-all duration-300 hover:-translate-y-1">
         <div className="aspect-video overflow-hidden relative">
           <img 

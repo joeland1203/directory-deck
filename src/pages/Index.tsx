@@ -1,44 +1,34 @@
 import { useState } from "react";
-import { Search, Filter, MapPin, Star } from "lucide-react";
+import { Search, Filter, MapPin, Star, Utensils, ShoppingBag, Package, Popcorn, Laptop, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
-import BusinessCard from "@/components/BusinessCard";
-import { useBusinesses } from "@/hooks/useBusinesses";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Index = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("todos");
-  const { businesses, loading } = useBusinesses();
-
   const categories = [
-    { value: "todos", label: "Todas las categorías" },
-    { value: "restaurante", label: "Restaurantes" },
-    { value: "tecnologia", label: "Tecnología" },
-    { value: "belleza", label: "Belleza" },
-    { value: "educacion", label: "Educación" },
-    { value: "fitness", label: "Fitness" },
-    { value: "cafe", label: "Cafés" },
+    { value: "alimentos", label: "Alimentos", icon: Utensils },
+    { value: "servicios", label: "Servicios", icon: Search },
+    { value: "productos", label: "Productos", icon: ShoppingBag },
+    { value: "snacks", label: "Snacks", icon: Popcorn },
+    { value: "tecnologia", label: "Tecnología", icon: Laptop },
+    { value: "belleza", label: "Belleza", icon: Heart },
   ];
-
-  const filteredBusinesses = businesses.filter((business) => {
-    const matchesSearch = business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (business.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "todos" || business.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Revista Belcanto - Directorio de Negocios Locales</title>
+        <meta name="description" content="Encuentra y conecta con los mejores negocios locales en tu comunidad. Explora categorías como alimentos, servicios, productos y más." />
+      </Helmet>
       <Header />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-20">
+      <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-2">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h1 className="text-3xl md:text-5xl font-bold mb-6">
               Encuentra los mejores
               <span className="block bg-gradient-primary bg-clip-text text-transparent">
                 negocios locales
@@ -48,87 +38,35 @@ const Index = () => {
               Descubre y conecta con negocios excepcionales en tu comunidad
             </p>
 
-            <div className="max-w-md mx-auto relative">
+            {/* Search Bar - Will be moved to Category Page */}
+            {/* <div className="max-w-md mx-auto relative opacity-50 cursor-not-allowed">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <Input
-                placeholder="¿Qué estás buscando?"
+                placeholder="¿Qué estás buscando? (Próximamente en categorías)"
                 className="pl-12 py-6 text-lg"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                disabled
               />
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
 
-      {/* Filters and Results */}
-      <section className="py-12">
+      {/* Category Grid */}
+      <section className="py-2">
         <div className="container mx-auto px-4">
-          {/* Category Filters */}
-          <div className="mb-8">
-            <div className="flex items-center gap-4 mb-6">
-              <Filter className="h-5 w-5 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">Categorías</h2>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <Badge
-                  key={category.value}
-                  variant={selectedCategory === category.value ? "default" : "secondary"}
-                  className="cursor-pointer px-4 py-2 text-sm hover:shadow-soft transition-all"
-                  onClick={() => setSelectedCategory(category.value)}
-                >
-                  {category.label}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Results Header */}
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-foreground">
-              {selectedCategory === "todos" ? "Todos los Negocios" : 
-               categories.find(c => c.value === selectedCategory)?.label}
-              <span className="text-muted-foreground ml-2">({filteredBusinesses.length})</span>
-            </h2>
-
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>Mostrando resultados</span>
-            </div>
-          </div>
-
-          {/* Business Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-card border rounded-lg overflow-hidden animate-pulse">
-                  <div className="h-48 bg-muted"></div>
-                  <div className="p-6 space-y-3">
-                    <div className="h-4 bg-muted rounded w-3/4"></div>
-                    <div className="h-3 bg-muted rounded w-1/2"></div>
-                    <div className="h-3 bg-muted rounded w-full"></div>
+          <h2 className="text-2xl font-bold text-center mb-8">Explora por Categoría</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {categories.map((category) => (
+              <Link to={`/category/${category.value}`} key={category.value}>
+                <Card className="flex flex-col items-center justify-center p-6 text-center hover:shadow-lg transition-shadow duration-300 h-full">
+                  <div className="mb-4 text-primary">
+                    <category.icon className="h-12 w-12" />
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBusinesses.map((business) => (
-                <BusinessCard key={business.id} business={business} />
-              ))}
-            </div>
-          )}
-
-          {!loading && filteredBusinesses.length === 0 && (
-            <div className="text-center py-12">
-              <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No se encontraron negocios</h3>
-              <p className="text-muted-foreground">
-                Intenta ajustar tus filtros de búsqueda
-              </p>
-            </div>
-          )}
+                  <CardTitle className="text-xl font-semibold capitalize">{category.label}</CardTitle>
+                </Card>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

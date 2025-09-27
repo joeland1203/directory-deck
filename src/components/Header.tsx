@@ -1,4 +1,4 @@
-import { MapPin, Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, Home, LayoutDashboard, LogIn } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,15 +9,13 @@ const Header = () => {
   const { user, signOut, userRole } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+    <header className="sticky top-0 z-50 bg-background-glass backdrop-blur border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <MapPin className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-foreground">DirectorioBiz</span>
+            <img src="/favicon.png" alt="Logo de Revista Belcanto" className="h-8 w-8 rounded-lg" />
+            <span className="text-xl font-bold text-foreground">Revista Belcanto</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -69,42 +67,46 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-border">
+          <div className="absolute right-0 w-[60%] md:hidden backdrop-filter backdrop-blur-lg bg-black/70 shadow-xl border-l border-white/10 rounded-b-xl">
             <div className="px-4 py-6 space-y-4">
               <Link 
                 to="/" 
-                className="block text-foreground/80 hover:text-foreground transition-colors py-2"
+                className="flex items-center space-x-3 text-green-400 font-semibold hover:text-green-200 transition-colors py-2 text-lg"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Inicio
+                <Home className="h-6 w-6" />
+                <span>Inicio</span>
               </Link>
               
               {user ? (
                 <>
                   <Link 
                     to="/dashboard" 
-                    className="block text-foreground/80 hover:text-foreground transition-colors py-2"
+                    className="flex items-center space-x-3 text-green-400 font-semibold hover:text-green-200 transition-colors py-2 text-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Panel de Control
+                    <LayoutDashboard className="h-6 w-6" />
+                    <span>Panel de Control</span>
                   </Link>
                   <button 
                     onClick={() => {
                       signOut();
                       setIsMenuOpen(false);
                     }}
-                    className="block w-full text-left text-foreground/80 hover:text-foreground transition-colors py-2"
+                    className="flex items-center space-x-3 w-full text-left text-green-400 font-semibold hover:text-green-200 transition-colors py-2 text-lg"
                   >
-                    Cerrar Sesión
+                    <LogOut className="h-6 w-6" />
+                    <span>Cerrar Sesión</span>
                   </button>
                 </>
               ) : (
                 <Link 
                   to="/login" 
-                  className="block bg-gradient-primary text-primary-foreground px-6 py-3 rounded-lg font-medium text-center hover:opacity-90 transition-opacity"
+                  className="flex items-center space-x-3 text-green-400 font-semibold hover:text-green-200 transition-colors py-2 text-lg"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Iniciar Sesión
+                  <LogIn className="h-6 w-6" />
+                  <span>Iniciar Sesión</span>
                 </Link>
               )}
             </div>
