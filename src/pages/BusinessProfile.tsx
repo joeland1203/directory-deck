@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import PromotionalPlaceholder from "@/components/PromotionalPlaceholder";
 
 // Define a type for the business data for type safety
 interface BusinessData {
@@ -157,6 +158,9 @@ const BusinessProfile = () => {
             </Card>
           </div>
         </div>
+      </div>
+      <div className="container mx-auto px-4 py-8">
+        <PromotionalPlaceholder />
       </div>
     </div>
   );

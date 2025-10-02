@@ -6,6 +6,7 @@ import BusinessCard from "@/components/BusinessCard";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import PromotionalPlaceholder from "@/components/PromotionalPlaceholder";
 
 const CategoryPage = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
@@ -69,7 +70,11 @@ const CategoryPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {businesses.map((business) => (
+            {businesses.slice(0, 2).map((business) => (
+              <BusinessCard key={business.id} business={business} />
+            ))}
+            {businesses.length > 2 && <PromotionalPlaceholder key="promo-1" />}
+            {businesses.slice(2).map((business) => (
               <BusinessCard key={business.id} business={business} />
             ))}
           </div>
