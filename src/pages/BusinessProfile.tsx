@@ -54,6 +54,18 @@ const BusinessProfile = () => {
     };
 
     fetchBusiness();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchBusiness();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [id]);
 
   if (loading) {

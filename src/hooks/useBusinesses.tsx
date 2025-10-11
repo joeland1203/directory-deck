@@ -82,6 +82,18 @@ export const useBusinesses = ({ searchTerm, category, pageSize = 9 }: UseBusines
     setPage(1);
     setHasMore(true);
     fetchBusinesses(1, true);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchBusinesses(1, true);
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [searchTerm, category, fetchBusinesses]);
 
   const loadMore = () => {
@@ -130,6 +142,18 @@ export const useUserBusiness = (userId: string | undefined) => {
 
   useEffect(() => {
     fetchUserBusiness();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchUserBusiness();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [userId]);
 
   return { business, loading, refetch: fetchUserBusiness };
