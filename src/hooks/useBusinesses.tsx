@@ -33,7 +33,7 @@ export const useBusinesses = ({ searchTerm, category, pageSize = 9 }: UseBusines
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchBusinesses = useCallback(async (currentPage: number, isNewQuery: boolean) => {
+  const fetchBusinesses = useCallback(async (currentPage: number, isNewQuery: boolean, retries = 3) => {
     try {
       setLoading(true);
 
@@ -55,7 +55,15 @@ export const useBusinesses = ({ searchTerm, category, pageSize = 9 }: UseBusines
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching businesses:', error);
+        if (retries > 0 && error.message.includes("Failed to fetch")) {
+          console.log(`Retrying fetch for businesses... (${retries} retries left)`);
+          await new Promise(res => setTimeout(res, 1000)); // Wait 1 second before retrying
+          return fetchBusinesses(currentPage, isNewQuery, retries - 1);
+        }
+        throw error;
+      }
 
       if (data) {
         if (isNewQuery) {
@@ -112,7 +120,7 @@ export const useUserBusiness = (userId: string | undefined) => {
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserBusiness = async () => {
+  const fetchUserBusiness = async (retries = 3) => {
     if (!userId) {
       setLoading(false);
       return;
@@ -126,7 +134,15 @@ export const useUserBusiness = (userId: string | undefined) => {
         .eq('owner_id', userId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user business:', error);
+        if (retries > 0 && error.message.includes("Failed to fetch")) {
+          console.log(`Retrying fetch for user business ${userId}... (${retries} retries left)`);
+          await new Promise(res => setTimeout(res, 1000)); // Wait 1 second before retrying
+          return fetchUserBusiness(retries - 1);
+        }
+        throw error;
+      }
       setBusiness(data);
     } catch (error) {
       console.error('Error fetching user business:', error);

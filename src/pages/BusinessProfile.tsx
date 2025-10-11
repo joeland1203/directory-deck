@@ -36,21 +36,33 @@ const BusinessProfile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBusiness = async () => {
+    const fetchBusiness = async (retries = 3) => {
       if (!id) return;
       setLoading(true);
-      const { data, error } = await supabase
-        .from("businesses")
-        .select("*")
-        .eq("id", id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("businesses")
+          .select("*")
+          .eq("id", id)
+          .single();
 
-      if (error) {
-        console.error("Error fetching business:", error);
-      } else {
-        setBusiness(data);
+        if (error) {
+          console.error("Error fetching business:", error);
+          if (retries > 0 && error.message.includes("Failed to fetch")) {
+            console.log(`Retrying fetch for business ${id}... (${retries} retries left)`);
+            await new Promise(res => setTimeout(res, 1000)); // Wait 1 second before retrying
+            return fetchBusiness(retries - 1);
+          }
+          setBusiness(null);
+        } else {
+          setBusiness(data);
+        }
+      } catch (error) {
+        console.error("An unexpected error occurred:", error);
+        setBusiness(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchBusiness();
