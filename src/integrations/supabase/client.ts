@@ -5,13 +5,35 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export let supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
   }
 });
+
+export const reinitializeSupabaseClient = async () => {
+  console.log('Reinitializing Supabase client...');
+  // Dispose of the old client if necessary (though createClient usually handles this)
+  // For a full reinitialization, we might need to explicitly close connections if they exist
+
+  // Recreate the client
+  supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      storage: localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+    }
+  });
+
+  // Attempt to refresh the session to ensure it's active
+  const { data, error } = await supabase.auth.refreshSession();
+  if (error) {
+    console.error('Error refreshing session during reinitialization:', error);
+  } else if (data.session) {
+    console.log('Session refreshed during reinitialization.', data.session);
+  } else {
+    console.log('No active session after reinitialization refresh.');
+  }
+};
