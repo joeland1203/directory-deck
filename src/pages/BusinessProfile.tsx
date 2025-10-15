@@ -3,7 +3,7 @@ import { useParams, Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Clock, MapPin, Phone, Globe, Star, Camera } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Phone, Globe, Star, Camera, MessageCircle } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -153,7 +153,22 @@ const BusinessProfile = () => {
                   {business.phone && <><Separator /><div className="flex items-center space-x-3"><Phone className="h-5 w-5 text-primary flex-shrink-0" /><div><p className="font-medium">Teléfono</p><p className="text-sm text-muted-foreground">{business.phone}</p></div></div></>}
                   {business.website && <><Separator /><div className="flex items-center space-x-3"><Globe className="h-5 w-5 text-primary flex-shrink-0" /><div><p className="font-medium">Sitio Web</p><a href={business.website} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">Visitar sitio web</a></div></div></>}
                 </div>
-                <Button className="w-full mt-6" size="lg">Contactar Negocio</Button>
+                {business.phone && (
+                  <div className="flex space-x-2 w-full mt-6">
+                    <Button asChild className="flex-1">
+                      <a href={`tel:${business.phone}`}>
+                        <Phone className="h-4 w-4 mr-2" />
+                        Llamar
+                      </a>
+                    </Button>
+                    <Button asChild className="flex-1 bg-green-500 hover:bg-green-600">
+                      <a href={`https://wa.me/${business.phone}`} target="_blank" rel="noopener noreferrer">
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        WhatsApp
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
