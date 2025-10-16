@@ -10,14 +10,14 @@ const PromotionalPlaceholder: React.FC = () => {
   const adLinkUrl = 'https://codigobinario.com.mx';
 
   return (
-    <div className="relative aspect-[2/1] w-full max-w-4xl mx-auto">
-      <div className="absolute inset-0 bg-card border rounded-lg overflow-hidden shadow-lg flex items-stretch">
-        <div className="block w-1/2 h-full relative">
-          <img src={adImage} alt={adTitle} className="w-full h-full object-cover" />
+    <div className="bg-card border rounded-lg overflow-hidden shadow-lg flex flex-col md:flex-row max-w-4xl mx-auto">
+      <div className="w-full md:w-1/2 relative aspect-[16/9] md:aspect-auto">
+        <img src={adImage} alt={adTitle} className="absolute inset-0 w-full h-full object-cover object-left-top" />
         <h3 className="absolute bottom-0 left-0 right-0 p-1 text-white text-base font-bold bg-black/50 text-center" style={{ lineHeight: 'var(--ad-title-line-height)' }}>
           {adTitle}
-        </h3>        </div>
-      <div className="p-6 w-1/2 text-center flex flex-col justify-between">
+        </h3>
+      </div>
+      <div className="w-full md:w-1/2 p-6 flex flex-col justify-between">
         <div className="flex items-center justify-center flex-grow">
           <h3 className="text-base md:text-xl mb-2">{adDescription}</h3>
         </div>
@@ -31,7 +31,6 @@ const PromotionalPlaceholder: React.FC = () => {
         <div className="flex items-center justify-center flex-grow">
           <p className="text-muted-foreground text-sm md:text-2xl font-bold">codigobinario.com.mx</p>
         </div>
-      </div>
       </div>
     </div>
   );
