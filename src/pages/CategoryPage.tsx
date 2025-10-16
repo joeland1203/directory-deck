@@ -69,14 +69,16 @@ const CategoryPage = () => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {businesses.slice(0, 2).map((business) => (
-                          <BusinessCard key={business.id} business={business} />
-                        ))}
-                        <PromotionalPlaceholder key="promo-1" />
-                        {businesses.slice(2).map((business) => (
-                          <BusinessCard key={business.id} business={business} />
-                        ))}          </div>
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {businesses.map((business) => (
+                <BusinessCard key={business.id} business={business} />
+              ))}
+            </div>
+            <div className="my-8">
+              <PromotionalPlaceholder key="promo-1" />
+            </div>
+          </div>
         )}
 
         {!loading && businesses.length === 0 && searchTerm === "" && (
