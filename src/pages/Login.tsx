@@ -90,6 +90,22 @@ const Login = () => {
                 <TabsTrigger value="register">Registrarse</TabsTrigger>
               </TabsList>
 
+              <Alert>
+                <AlertDescription>
+                  <div className="text-sm">
+                    <p className="font-semibold">Para Iniciar Sesión:</p>
+                    <p className="mb-2">Usa esta pestaña si ya tienes una cuenta.</p>
+                    <p className="font-semibold">Para Registrarte:</p>
+                    <ol className="list-decimal list-inside space-y-1">
+                      <li>Cambia a la pestaña <strong>"Registrarse"</strong>.</li>
+                      <li>Completa el formulario. Es importante que uses un <strong>correo electrónico real</strong>.</li>
+                      <li>Te enviaremos un correo para confirmar tu cuenta.</li>
+                      <li><strong>Revisa tu bandeja de entrada</strong> y haz clic en el enlace de confirmación para poder acceder.</li>
+                    </ol>
+                  </div>
+                </AlertDescription>
+              </Alert>
+
               <TabsContent value="login" className="space-y-4">
                 <form className="space-y-4" onSubmit={handleLogin}>
                   <div className="space-y-2">

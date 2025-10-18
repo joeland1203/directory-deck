@@ -9,11 +9,12 @@ import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, Upload } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 const businessCategories = [
   "alimentos", 
@@ -67,7 +68,7 @@ const BusinessProfileForm = () => {
     if (isEditMode && user) {
       const fetchBusinessData = async () => {
         setIsLoading(true);
-        const { data } = await supabase.from("businesses").select("*").eq("owner_id", user.id).single();
+        const { data } = await supabase.from("businesses").select("* ").eq("owner_id", user.id).single();
         if (data) {
           const formData = { ...data, description: data.description || "", phone: data.phone || "", website: data.website || "", main_image_url: data.main_image_url || "", gallery_images: data.gallery_images || [], hours: data.hours || "" };
           form.reset(formData);
@@ -87,7 +88,7 @@ const BusinessProfileForm = () => {
     if (file.size > 500 * 1024) {
       toast({
         title: "Imagen demasiado grande",
-        description: `La imagen "${file.name}" supera el límite de 500 KB.`,
+        description: `La imagen \"${file.name}\" supera el límite de 500 KB.`, 
         variant: "destructive",
       });
       return;
@@ -118,7 +119,7 @@ const BusinessProfileForm = () => {
       if (file.size > 500 * 1024) {
         toast({
           title: "Imagen de galería demasiado grande",
-          description: `La imagen "${file.name}" supera el límite de 500 KB y no será añadida.`,
+          description: `La imagen \"${file.name}\" supera el límite de 500 KB y no será añadida.`, 
           variant: "destructive",
         });
       } else {
@@ -234,7 +235,19 @@ const BusinessProfileForm = () => {
       <Header />
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto">
-          <CardHeader><CardTitle>{isEditMode ? "Editar" : "Crear"} Perfil de Negocio</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>{isEditMode ? "Editar" : "Crear"} Perfil de Negocio</CardTitle>
+            <CardDescription>
+              <p>Rellena los siguientes campos para crear o actualizar el perfil de tu negocio. La información que proporciones será visible para los clientes en el directorio.</p>
+              <h4 className="font-semibold mt-4 mb-2">Pasos a seguir:</h4>
+              <ol className="list-decimal list-inside space-y-1 text-sm">
+                <li><strong>Información Principal:</strong> Asegúrate de que el nombre, la categoría y la descripción sean claros y atractivos.</li>
+                <li><strong>Imágenes:</strong> Sube una imagen principal que represente bien a tu negocio y hasta 4 imágenes adicionales para tu galería (límite de 500 KB por imagen).</li>
+                <li><strong>Ubicación y Contacto:</strong> Proporciona la dirección completa y los datos de contacto para que los clientes puedan encontrarte.</li>
+                <li><strong>Horarios:</strong> Especifica tus horarios de atención para que los clientes sepan cuándo visitarte.</li>
+              </ol>
+            </CardDescription>
+          </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -250,12 +263,20 @@ const BusinessProfileForm = () => {
                           {(previewUrl || existingImageUrl) && (
                               <img src={previewUrl || existingImageUrl || ''} alt="Vista previa" className="w-full aspect-video rounded-md mb-4 object-cover" />
                           )}
-                          <Input type="file" accept="image/*" onChange={handleImageChange} />
+                          <div className="flex justify-center">
+                            <Label htmlFor="main-image-input" className="cursor-pointer bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md flex items-center justify-center w-2/3 md:w-fit">
+                              <Upload className="h-4 w-4 mr-2" />
+                              Subir Imagen
+                            </Label>
+                            <Input id="main-image-input" type="file" accept="image/*" onChange={handleImageChange} className="sr-only" />
+                          </div>
                           {(previewUrl || existingImageUrl) && (
-                            <Button type="button" variant="destructive" size="sm" className="mt-2" onClick={handleRemoveMainImage}>
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Eliminar Imagen Principal
-                            </Button>
+                            <div className="flex justify-center">
+                              <Button type="button" variant="destructive" size="sm" className="mt-2" onClick={handleRemoveMainImage}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Eliminar Imagen Principal
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </FormControl>
@@ -269,13 +290,16 @@ const BusinessProfileForm = () => {
                   name="gallery_images"
                   render={() => (
                     <FormItem>
-                      <FormLabel>Galería de Imágenes (Máx. 4)</FormLabel>
+                      <FormLabel>Galería de Imágenes (Máximo 4 imágenes)</FormLabel>
+                      <FormDescription>
+                        Toca una imagen para que aparezca la 'X' y poder eliminarla.
+                      </FormDescription>
                       <FormControl>
                         <div>
                           <div className="grid grid-cols-3 gap-4 mb-4">
                             {[...existingGalleryUrls, ...galleryPreviewUrls].map((url, index) => (
                               <div key={index} className="relative group">
-                                <img src={url} alt={`Vista previa ${index}`} className="w-full h-32 object-cover rounded-md" />
+                                <img src={url} alt={`Vista previa de la galería de imágenes ${index + 1}`} className="w-full h-32 object-cover rounded-md" />
                                 <Button
                                   type="button"
                                   variant="destructive"
@@ -288,7 +312,13 @@ const BusinessProfileForm = () => {
                               </div>
                             ))}
                           </div>
-                          <Input type="file" accept="image/*" multiple onChange={handleGalleryChange} />
+                          <div className="flex justify-center">
+                            <Label htmlFor="gallery-image-input" className="cursor-pointer bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md flex items-center justify-center w-2/3 md:w-fit">
+                              <Upload className="h-4 w-4 mr-2" />
+                              Subir Imágenes
+                            </Label>
+                            <Input id="gallery-image-input" type="file" accept="image/*" multiple onChange={handleGalleryChange} className="sr-only" />
+                          </div>
                         </div>
                       </FormControl>
                       <FormMessage />

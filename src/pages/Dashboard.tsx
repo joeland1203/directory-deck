@@ -1,31 +1,25 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Plus, 
   Edit, 
-  Trash2, 
   MapPin, 
   Phone, 
   Globe, 
   Clock,
   Image as ImageIcon,
-  Settings,
-  BarChart3,
-  Users
+  Settings
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { useBusinesses, useUserBusiness } from "@/hooks/useBusinesses";
+import { useUserBusiness } from "@/hooks/useBusinesses";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, userRole, loading } = useAuth();
-  const { businesses } = useBusinesses({});
+  const { user, loading } = useAuth();
   const { business: userBusiness, loading: businessLoading } = useUserBusiness(user?.id);
-  const [activeTab, setActiveTab] = useState("my-business");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -51,68 +45,24 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  const isAdmin = userRole === "admin";
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Panel de Control</h1>
           <p className="text-muted-foreground">
-            {isAdmin 
-              ? 'Administra todos los negocios de la plataforma'
-              : 'Gestiona tu perfil de negocio y atrae más clientes'
-            }
+            ¡Bienvenido a tu centro de operaciones! <br />
+            Desde aquí puedes editar la información de tu negocio, añadir fotos a tu galería y actualizar tus horarios. <br />
+            Para hacerlo, selecciona el botón 'Editar'.
+          </p>
+          <p className="text-muted-foreground mt-2">
+            Un perfil completo y actualizado es la mejor forma de atraer nuevos clientes.
           </p>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex space-x-1 mb-6 border-b border-border">
-          {!isAdmin && (
-            <Button
-              variant={activeTab === "my-business" ? "default" : "ghost"}
-              onClick={() => setActiveTab("my-business")}
-              className="rounded-b-none"
-            >
-              Mi Negocio
-            </Button>
-          )}
-          
-          {isAdmin && (
-            <>
-              <Button
-                variant={activeTab === "all-businesses" ? "default" : "ghost"}
-                onClick={() => setActiveTab("all-businesses")}
-                className="rounded-b-none"
-              >
-                Todos los Negocios
-              </Button>
-              <Button
-                variant={activeTab === "analytics" ? "default" : "ghost"}
-                onClick={() => setActiveTab("analytics")}
-                className="rounded-b-none"
-              >
-                Estadísticas
-              </Button>
-            </>
-          )}
-        </div>
-
-        {/* Content */}
-        {activeTab === "my-business" && !isAdmin && (
-          <BusinessOwnerDashboard userBusiness={userBusiness} navigate={navigate} />
-        )}
-        
-        {activeTab === "all-businesses" && isAdmin && (
-          <AdminBusinessesDashboard businesses={businesses} />
-        )}
-        
-        {activeTab === "analytics" && isAdmin && (
-          <AdminAnalyticsDashboard />
-        )}
+        <BusinessOwnerDashboard userBusiness={userBusiness} navigate={navigate} />
       </div>
     </div>
   );
@@ -143,7 +93,6 @@ const BusinessOwnerDashboard = ({ userBusiness, navigate }: { userBusiness: any,
 
   return (
     <div className="space-y-6">
-      {/* Business Info Card */}
       <Card>
         <div className="md:grid md:grid-cols-3 md:gap-6 p-6">
           <div className="md:col-span-1">
