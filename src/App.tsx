@@ -12,6 +12,7 @@ import CategoryPage from "./pages/CategoryPage";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -26,11 +27,15 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/business/:id" element={<BusinessProfile />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/business-profile" element={<BusinessProfileForm />} />
-              <Route path="/business-profile/edit" element={<BusinessProfileForm />} />
               <Route path="/login" element={<Login />} />
               <Route path="/category/:categoryName" element={<CategoryPage />} />
+
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/business-profile" element={<BusinessProfileForm />} />
+                <Route path="/business-profile/edit" element={<BusinessProfileForm />} />
+              </Route>
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

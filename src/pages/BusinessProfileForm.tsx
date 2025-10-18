@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { X, Trash2, Upload } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const businessCategories = [
   "alimentos", 
@@ -88,7 +89,7 @@ const BusinessProfileForm = () => {
     if (file.size > 500 * 1024) {
       toast({
         title: "Imagen demasiado grande",
-        description: `La imagen \"${file.name}\" supera el límite de 500 KB.`, 
+        description: `La imagen "${file.name}" supera el límite de 500 KB.`, 
         variant: "destructive",
       });
       return;
@@ -119,7 +120,7 @@ const BusinessProfileForm = () => {
       if (file.size > 500 * 1024) {
         toast({
           title: "Imagen de galería demasiado grande",
-          description: `La imagen \"${file.name}\" supera el límite de 500 KB y no será añadida.`, 
+          description: `La imagen "${file.name}" supera el límite de 500 KB y no será añadida.`, 
           variant: "destructive",
         });
       } else {
@@ -156,10 +157,8 @@ const BusinessProfileForm = () => {
     }
     setIsLoading(true);
 
-    // Store original gallery URLs to compare for deletions
     const originalGalleryUrls = form.getValues().gallery_images || [];
 
-    // 1. Handle Main Image Upload
     let imageUrl = existingImageUrl;
     if (imageFile) {
       const filePath = `public/${user.id}-${Date.now()}-${imageFile.name}`;
@@ -171,11 +170,9 @@ const BusinessProfileForm = () => {
       }
       imageUrl = supabase.storage.from("business-images").getPublicUrl(filePath).data.publicUrl;
     } else if (existingImageUrl === null) {
-      // If existing image was removed by user
       imageUrl = null;
     }
 
-    // 2. Handle Gallery Images Upload
     const newGalleryUrls = await Promise.all(
       galleryFiles.map(async (file) => {
         const filePath = `public/${user.id}-gallery-${Date.now()}-${file.name}`;
@@ -190,7 +187,6 @@ const BusinessProfileForm = () => {
     const filteredNewUrls = newGalleryUrls.filter((url): url is string => url !== null);
     const finalGalleryUrls = [...existingGalleryUrls, ...filteredNewUrls];
 
-    // 3. Identify images to delete from storage
     const imagesToDelete = originalGalleryUrls.filter(url => !finalGalleryUrls.includes(url));
     if (imagesToDelete.length > 0) {
       const filePathsToDelete = imagesToDelete.map(url => {
@@ -204,10 +200,19 @@ const BusinessProfileForm = () => {
       }
     }
 
-    // 4. Prepare business data
-    const businessData = { ...data, owner_id: user.id, main_image_url: imageUrl, gallery_images: finalGalleryUrls };
+    const { 
+      main_image_url: _main_image_url, 
+      gallery_images: _gallery_images, 
+      ...restOfData 
+    } = data;
 
-    // 5. Insert or Update database
+    const businessData = { 
+      ...restOfData, 
+      owner_id: user.id, 
+      main_image_url: imageUrl, 
+      gallery_images: finalGalleryUrls 
+    };
+
     let dbError;
     if (isEditMode) {
       const { error } = await supabase.from("businesses").update(businessData).eq("owner_id", user.id);
@@ -238,248 +243,258 @@ const BusinessProfileForm = () => {
           <CardHeader>
             <CardTitle>{isEditMode ? "Editar" : "Crear"} Perfil de Negocio</CardTitle>
             <CardDescription>
-              <p>Rellena los siguientes campos para crear o actualizar el perfil de tu negocio. La información que proporciones será visible para los clientes en el directorio.</p>
-              <h4 className="font-semibold mt-4 mb-2">Pasos a seguir:</h4>
-              <ol className="list-decimal list-inside space-y-1 text-sm">
-                <li><strong>Información Principal:</strong> Asegúrate de que el nombre, la categoría y la descripción sean claros y atractivos.</li>
-                <li><strong>Imágenes:</strong> Sube una imagen principal que represente bien a tu negocio y hasta 4 imágenes adicionales para tu galería (límite de 500 KB por imagen).</li>
-                <li><strong>Ubicación y Contacto:</strong> Proporciona la dirección completa y los datos de contacto para que los clientes puedan encontrarte.</li>
-                <li><strong>Horarios:</strong> Especifica tus horarios de atención para que los clientes sepan cuándo visitarte.</li>
-              </ol>
+              Rellena los campos para crear o actualizar tu perfil. La información que proporciones será visible para los clientes.
             </CardDescription>
+            <h4 className="font-semibold mt-4 mb-2">Pasos a seguir:</h4>
+            <ol className="list-decimal list-inside space-y-1 text-sm">
+              <li>Navega por las pestañas (Principal, Imágenes, etc.) para rellenar toda la información.</li>
+              <li><strong>Imágenes:</strong> Sube una imagen principal y hasta 4 de galería. <strong>Importante:</strong> cada imagen no debe superar los 500 KB.</li>
+              <li><strong>Guardar:</strong> Una vez completes todas las secciones, haz clic en el botón de guardar al final del formulario.</li>
+            </ol>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                
-                <FormField
-                  control={form.control}
-                  name="main_image_url"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Imagen Principal</FormLabel>
-                      <FormControl>
-                        <div>
-                          {(previewUrl || existingImageUrl) && (
-                              <img src={previewUrl || existingImageUrl || ''} alt="Vista previa" className="w-full aspect-video rounded-md mb-4 object-cover" />
-                          )}
-                          <div className="flex justify-center">
-                            <Label htmlFor="main-image-input" className="cursor-pointer bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md flex items-center justify-center w-2/3 md:w-fit">
-                              <Upload className="h-4 w-4 mr-2" />
-                              Subir Imagen
-                            </Label>
-                            <Input id="main-image-input" type="file" accept="image/*" onChange={handleImageChange} className="sr-only" />
-                          </div>
-                          {(previewUrl || existingImageUrl) && (
-                            <div className="flex justify-center">
-                              <Button type="button" variant="destructive" size="sm" className="mt-2" onClick={handleRemoveMainImage}>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Eliminar Imagen Principal
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="gallery_images"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Galería de Imágenes (Máximo 4 imágenes)</FormLabel>
-                      <FormDescription>
-                        Toca una imagen para que aparezca la 'X' y poder eliminarla.
-                      </FormDescription>
-                      <FormControl>
-                        <div>
-                          <div className="grid grid-cols-3 gap-4 mb-4">
-                            {[...existingGalleryUrls, ...galleryPreviewUrls].map((url, index) => (
-                              <div key={index} className="relative group">
-                                <img src={url} alt={`Vista previa de la galería de imágenes ${index + 1}`} className="w-full h-32 object-cover rounded-md" />
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="icon"
-                                  className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
-                                  onClick={() => index < existingGalleryUrls.length ? removeExistingGalleryImage(url) : removeNewGalleryImage(index - existingGalleryUrls.length)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
+                <Tabs defaultValue="info" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="info">Principal</TabsTrigger>
+                    <TabsTrigger value="images">Imágenes</TabsTrigger>
+                    <TabsTrigger value="location">Ubicación</TabsTrigger>
+                    <TabsTrigger value="hours">Horarios</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="info" className="space-y-8 pt-8 bg-muted/40 p-6 rounded-md">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre del Negocio</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: Café El Buen Sabor" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Categoría</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecciona una categoría" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {businessCategories.map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Descripción</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Describe tu negocio..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                  <TabsContent value="images" className="space-y-8 pt-8 bg-muted/40 p-6 rounded-md">
+                    <FormField
+                      control={form.control}
+                      name="main_image_url"
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>Imagen Principal</FormLabel>
+                          <FormDescription className="text-red-500">
+                            Atención: Cada imagen no debe superar los 500 KB.
+                          </FormDescription>
+                          <FormControl>
+                            <div>
+                              {(previewUrl || existingImageUrl) && (
+                                  <img src={previewUrl || existingImageUrl || ''} alt="Vista previa" className="w-full aspect-video rounded-md mb-4 object-cover" />
+                              )}
+                              <div className="flex justify-center">
+                                <Label htmlFor="main-image-input" className="cursor-pointer bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md flex items-center justify-center w-2/3 md:w-fit">
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Subir Imagen
+                                </Label>
+                                <Input id="main-image-input" type="file" accept="image/*" onChange={handleImageChange} className="sr-only" />
                               </div>
-                            ))}
-                          </div>
-                          <div className="flex justify-center">
-                            <Label htmlFor="gallery-image-input" className="cursor-pointer bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md flex items-center justify-center w-2/3 md:w-fit">
-                              <Upload className="h-4 w-4 mr-2" />
-                              Subir Imágenes
-                            </Label>
-                            <Input id="gallery-image-input" type="file" accept="image/*" multiple onChange={handleGalleryChange} className="sr-only" />
-                          </div>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre del Negocio</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: Café El Buen Sabor" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Categoría</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona una categoría" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {businessCategories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category.charAt(0).toUpperCase() + category.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Descripción</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Describe tu negocio..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dirección</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: Av. Siempre Viva 123" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-1">
-                        <FormLabel>Ciudad</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ej: Springfield" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="state"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-1">
-                        <FormLabel>Estado</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ej: California" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="postal_code"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-1">
-                        <FormLabel>Código Postal</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ej: 90210" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Teléfono</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: 55 1234 5678" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="website"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sitio Web</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="hours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Horarios</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Ej: Lunes a Viernes: 9am - 6pm\nSábados: 10am - 2pm"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+                              {(previewUrl || existingImageUrl) && (
+                                <div className="flex justify-center">
+                                  <Button type="button" variant="destructive" size="sm" className="mt-2" onClick={handleRemoveMainImage}>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Eliminar Imagen Principal
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="gallery_images"
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>Galería de Imágenes (Máximo 4 imágenes)</FormLabel>
+                          <FormDescription className="text-red-500">
+                            Atención: Cada imagen no debe superar los 500 KB.
+                          </FormDescription>
+                          <FormDescription>
+                            Toca una imagen para que aparezca la 'X' y poder eliminarla.
+                          </FormDescription>
+                          <FormControl>
+                            <div>
+                              <div className="grid grid-cols-3 gap-4 mb-4">
+                                {[...existingGalleryUrls, ...galleryPreviewUrls].map((url, index) => (
+                                  <div key={index} className="relative group">
+                                    <img src={url} alt={`Vista previa de la galería de imágenes ${index + 1}`} className="w-full h-32 object-cover rounded-md" />
+                                    <Button
+                                      type="button"
+                                      variant="destructive"
+                                      size="icon"
+                                      className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
+                                      onClick={() => index < existingGalleryUrls.length ? removeExistingGalleryImage(url) : removeNewGalleryImage(index - existingGalleryUrls.length)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="flex justify-center">
+                                <Label htmlFor="gallery-image-input" className="cursor-pointer bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md flex items-center justify-center w-2/3 md:w-fit">
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Subir Imágenes
+                                </Label>
+                                <Input id="gallery-image-input" type="file" accept="image/*" multiple onChange={handleGalleryChange} className="sr-only" />
+                              </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                  <TabsContent value="location" className="space-y-8 pt-8 bg-muted/40 p-6 rounded-md">
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Dirección</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: Av. Siempre Viva 123" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-1">
+                            <FormLabel>Ciudad</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ej: Springfield" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-1">
+                            <FormLabel>Estado</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ej: California" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="postal_code"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-1">
+                            <FormLabel>Código Postal</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ej: 90210" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Teléfono</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: 55 1234 5678" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="website"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sitio Web</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                  <TabsContent value="hours" className="space-y-8 pt-8 bg-muted/40 p-6 rounded-md">
+                    <FormField
+                      control={form.control}
+                      name="hours"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Horarios</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Ej: Lunes a Viernes: 9am - 6pm\nSábados: 10am - 2pm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                </Tabs>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Guardando..." : (isEditMode ? "Guardar Cambios" : "Guardar Perfil")}
                 </Button>

@@ -103,6 +103,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
+      // Attempt to refresh the session to ensure the client has the latest state
+      // This might help if the client's internal session state is out of sync
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        console.warn('Could not refresh session before sign out:', refreshError);
+        // Continue with sign out even if refresh fails, as the session might be truly gone
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       

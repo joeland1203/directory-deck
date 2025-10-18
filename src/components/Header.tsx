@@ -1,12 +1,13 @@
 import { Menu, X, User, LogOut, Home, LayoutDashboard, LogIn } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut, userRole } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-50 bg-background-glass backdrop-blur border-b border-border">
@@ -38,7 +39,7 @@ const Header = () => {
                 </Link>
                 <Button 
                   variant="ghost"
-                  onClick={signOut}
+                  onClick={async () => { await signOut(); navigate('/', { replace: true }); }}
                   className="text-foreground/80 hover:text-foreground transition-colors"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
@@ -89,8 +90,9 @@ const Header = () => {
                     <span>Panel de Control</span>
                   </Link>
                   <button 
-                    onClick={() => {
-                      signOut();
+                    onClick={async () => {
+                      await signOut();
+                      navigate('/', { replace: true });
                       setIsMenuOpen(false);
                     }}
                     className="flex items-center space-x-3 w-full text-left text-green-400 font-semibold hover:text-green-200 transition-colors py-2 text-lg"
