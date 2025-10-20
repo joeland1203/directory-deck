@@ -6,7 +6,7 @@ import BusinessCard from "@/components/BusinessCard";
 import { useBusinesses } from "@/hooks/useBusinesses";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import PromotionalPlaceholder from "@/components/PromotionalPlaceholder";
+import CallToAction from "@/components/CallToAction";
 
 const CategoryPage = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
@@ -75,9 +75,7 @@ const CategoryPage = () => {
                 <BusinessCard key={business.id} business={business} />
               ))}
             </div>
-            <div className="my-8">
-              <PromotionalPlaceholder key="promo-1" />
-            </div>
+
           </div>
         )}
 
@@ -109,6 +107,7 @@ const CategoryPage = () => {
           </div>
         )}
       </div>
+      <CallToAction />
     </div>
   );
 };

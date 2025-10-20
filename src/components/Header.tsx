@@ -16,11 +16,11 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img src="/favicon.png" alt="Logo de Revista Belcanto" className="h-8 w-8 rounded-lg" />
-            <span className="text-xl font-bold text-foreground">Revista Belcanto</span>
+            <span className="text-lg md:text-xl font-bold text-foreground">Revista Belcanto</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="flex items-center space-x-6">
+          <nav className="flex items-center space-x-2 md:space-x-6">
             <Button variant="outline" asChild>
               <Link 
                 to="/" 
@@ -48,9 +48,9 @@ const Header = () => {
                 </Button>
               </div>
             ) : (
-              <Button asChild>
+              <Button className="h-auto p-1 text-center text-xs whitespace-normal md:h-10 md:px-4 md:py-2 md:text-sm md:whitespace-nowrap" asChild>
                 <Link to="/login">
-                  Iniciar Sesión
+                  Iniciar Sesion o Registrarse
                 </Link>
               </Button>
             )}
