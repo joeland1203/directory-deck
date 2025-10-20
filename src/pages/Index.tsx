@@ -5,7 +5,6 @@ import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import PromotionalPlaceholder from "@/components/PromotionalPlaceholder";
 
 const Index = () => {
   const categories = [
@@ -68,13 +67,6 @@ const Index = () => {
               </Link>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Ad Placeholder Section */}
-      <section className="py-8">
-        <div className="container mx-auto px-4">
-          <PromotionalPlaceholder />
         </div>
       </section>
 
